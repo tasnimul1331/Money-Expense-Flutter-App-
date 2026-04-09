@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'expenses_list/expenses_list.dart';
 import '../model/expense.dart';
+import 'new_expense.dart';
 
 class Expanses extends StatefulWidget {
   const Expanses({super.key});
@@ -29,7 +30,7 @@ class _ExpansesState extends State<Expanses> {
     showModalBottomSheet(
       context: context,
       builder: (ctx) {
-        return const Text('The Modal!');
+        return const NewExpense();
       },
     );
   }
