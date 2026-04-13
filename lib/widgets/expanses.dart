@@ -26,11 +26,17 @@ class _ExpansesState extends State<Expanses> {
     ),
   ];
 
+  void onAddExpense(Expense expense) {
+    setState(() {
+      _recentExpanses.add(expense);
+    });
+  }
+
   void _addExpense() {
     showModalBottomSheet(
       context: context,
       builder: (ctx) {
-        return const NewExpense();
+        return NewExpense(onAddExpense: onAddExpense);
       },
     );
   }

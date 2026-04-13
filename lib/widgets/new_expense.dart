@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:expence_traker/model/expense.dart';
 
 class NewExpense extends StatefulWidget {
-  const NewExpense({super.key});
+  const NewExpense({super.key, required this.onAddExpense});
+
+  final void Function(Expense) onAddExpense;
 
   @override
   State<NewExpense> createState() => _NewExpenseState();
@@ -10,15 +13,55 @@ class NewExpense extends StatefulWidget {
 class _NewExpenseState extends State<NewExpense> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
+  DateTime? _selectedDate;
+  Category _selectedCategory = Category.food;
 
-  void _datePick() {
+  void _datePick() async {
     final now = DateTime.now();
-    showDatePicker(
+    final selectedDate = await showDatePicker(
       context: context,
       initialDate: now,
       firstDate: DateTime(now.year - 1, now.month, now.day),
       lastDate: now,
     );
+    setState(() {
+      _selectedDate = selectedDate;
+    });
+  }
+
+  void _submitExpenseData() {
+    final enteredAmount = double.tryParse(_amountController.text);
+    final amountIsInvalid = enteredAmount == null || enteredAmount <= 0;
+    if (_titleController.text.trim().isEmpty ||
+        amountIsInvalid ||
+        _selectedDate == null) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Invalid input'),
+          content: const Text(
+            'Please make sure a valid title, amount, date and category was entered.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Okay'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    widget.onAddExpense(
+      Expense(
+        title: _titleController.text.trim(),
+        amount: double.parse(_amountController.text),
+        date: _selectedDate!,
+        category: _selectedCategory,
+      ),
+    );
+    Navigator.pop(context);
   }
 
   @override
@@ -56,26 +99,49 @@ class _NewExpenseState extends State<NewExpense> {
               const Spacer(),
               Row(
                 children: [
+                  Text(
+                    _selectedDate != null
+                        ? formatter.format(_selectedDate!)
+                        : 'No date selected',
+                  ),
                   IconButton(
                     onPressed: _datePick,
                     icon: const Icon(Icons.calendar_month),
                   ),
                   const SizedBox(width: 8),
-                  Text('Select Date'),
                 ],
               ),
             ],
           ),
+          const SizedBox(height: 16),
           Row(
             children: [
-              ElevatedButton(
-                onPressed: () => print(
-                  'Saving expense... ${_titleController.text} - ${_amountController.text}',
-                ),
-                child: Text("Save Expense"),
+              DropdownButton(
+                value: _selectedCategory,
+                items: Category.values
+                    .map(
+                      (category) => DropdownMenuItem(
+                        value: category,
+                        child: Text(category.name.toUpperCase()),
+                      ),
+                    )
+                    .toList(),
+                onChanged: (value) {
+                  setState(() {
+                    if (value == null) {
+                      return;
+                    }
+                    _selectedCategory = value;
+                  });
+                },
               ),
               const Spacer(),
               ElevatedButton(
+                onPressed: _submitExpenseData,
+                child: Text("Save Expense"),
+              ),
+              const Spacer(),
+              TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text("Cancel"),
               ),
