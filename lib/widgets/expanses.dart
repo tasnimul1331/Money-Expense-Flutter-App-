@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'expenses_list/expenses_list.dart';
 import '../model/expense.dart';
 import 'new_expense.dart';
+import 'chart/chart.dart';
 
 class Expanses extends StatefulWidget {
   const Expanses({super.key});
@@ -32,8 +33,33 @@ class _ExpansesState extends State<Expanses> {
     });
   }
 
+  void _removeExpense(Expense expense) {
+    final expenseIndex = _recentExpanses.indexOf(expense);
+    setState(() {
+      _recentExpanses.remove(expense);
+    });
+
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 3),
+        persist: false,
+        content: Text('${expense.title} removed.'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            setState(() {
+              _recentExpanses.insert(expenseIndex, expense);
+            });
+          },
+        ),
+      ),
+    );
+  }
+
   void _addExpense() {
     showModalBottomSheet(
+      isScrollControlled: true,
       context: context,
       builder: (ctx) {
         return NewExpense(onAddExpense: onAddExpense);
@@ -43,6 +69,15 @@ class _ExpansesState extends State<Expanses> {
 
   @override
   Widget build(BuildContext context) {
+    Widget child = const Center(
+      child: Text('No expenses found. Start adding some!'),
+    );
+    if (_recentExpanses.isNotEmpty) {
+      child = ExpensesList(
+        expenses: _recentExpanses,
+        onRemoveExpense: _removeExpense,
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -53,7 +88,8 @@ class _ExpansesState extends State<Expanses> {
       body: Column(
         children: [
           const Text('The chart!'),
-          Expanded(child: ExpensesList(expenses: _recentExpanses)),
+          Chart(expenses: _recentExpanses),
+          Expanded(child: child),
         ],
       ),
     );
