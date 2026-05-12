@@ -59,6 +59,7 @@ class _ExpansesState extends State<Expanses> {
 
   void _addExpense() {
     showModalBottomSheet(
+      useSafeArea: true,
       isScrollControlled: true,
       context: context,
       builder: (ctx) {
@@ -69,6 +70,8 @@ class _ExpansesState extends State<Expanses> {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+
     Widget child = const Center(
       child: Text('No expenses found. Start adding some!'),
     );
@@ -85,13 +88,19 @@ class _ExpansesState extends State<Expanses> {
         ],
         title: const Text('Expanses'),
       ),
-      body: Column(
-        children: [
-          const Text('The chart!'),
-          Chart(expenses: _recentExpanses),
-          Expanded(child: child),
-        ],
-      ),
+      body: width < 600
+          ? Column(
+              children: [
+                Chart(expenses: _recentExpanses),
+                Expanded(child: child),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(child: Chart(expenses: _recentExpanses)),
+                Expanded(child: child),
+              ],
+            ),
     );
   }
 }
